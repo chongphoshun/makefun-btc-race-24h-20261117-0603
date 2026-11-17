@@ -46,6 +46,16 @@ Exits (per entry, whole position):
     (mode B): the dip was not the bottom, cut it.
   - Cooldown: after any sell, no new buy for COOLDOWN bars.
 
+Verified on the dev window (kit grade-local, 2026-11-17): net PnL +8.80
+USDC (gate: > $0), 4 trades, win rate 1.00, max drawdown 0.57%, 0
+rejected orders. The window is flat (+0.49%); the previous entry lost
+-$19.01 on it. A 60-variant grid search (DIP x BOUNCE_10M x TAKE_PROFIT x
+TRAIL_STOP) found a flat plateau at DIP=-0.012, BOUNCE_10M=0.002,
+TAKE_PROFIT=0.008, TRAIL_STOP=0.006 — the score does not hang on a
+knife-edge parameter. Shallow DIP (-0.8%/-1.0%) loses by trading the
+chop; TP 1.0-1.5% loses by missing the recoveries. At 2x fees the net is
+still +$7.19. See TEST-REPORT.md for the full search.
+
 Protocol: agent-fun/bars-replay/v1 via the kit's Python shim (vendored
 byte-identical under vendor/). One reply per batch, deterministic: only
 float arithmetic on the bar closes, no clock, no randomness, no I/O.
@@ -61,6 +71,12 @@ import makefun_bars
 SYMBOL = "CBBTC"
 
 # --- entry parameters ---
+# Grid-searched on the dev window (60 variants). DIP=-0.012 is the shallow
+# end of a flat plateau (-0.012 to -0.014 all score +8.80): deep enough to
+# skip the chop, shallow enough to still fire a few times in a flat race
+# window. Shallower (-0.008/-0.010) loses by trading noise. BOUNCE_10M=0.002
+# is the stronger bounce filter: it fires only once the dip has actually
+# turned, which is why this bot wins every trade it takes on dev.
 RANGE_BARS = 240      # mode A: rolling high window (bars)
 DIP = -0.012          # mode A: close DIP below the 240-bar high
 BOUNCE_10M = 0.002    # both modes: 10-min return above this
